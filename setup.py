@@ -28,7 +28,7 @@ setup(
     ],
     entry_points={
         'powerplug.apps': ['feedcal = feedcal'],
-        #'powerplug.urls': ['location = position.urls'],
+        'powerplug.urls': ['feedcal = feedcal.urls'],
         #'powerplug.rest': ['location = position.views:LocationViewSet'],
     },
 )
