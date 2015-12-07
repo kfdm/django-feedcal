@@ -1,6 +1,6 @@
 import collections
 import json
-
+from django.shortcuts import render
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.generic.base import View
@@ -21,7 +21,7 @@ def display(cal):
     return cal.to_ical().decode('utf8').replace('\r\n', '\n').strip()
 
 class PieView(View):
-    def get(self, request):
+    def get(self, request, uuid):
         '''
         Create a Google DataView suitable for being rendered as a pie chart
         '''
@@ -36,7 +36,7 @@ class PieView(View):
 
         durations = collections.defaultdict(int)
 
-        for calset in feedcal.models.MergedCalendar.objects.all():
+        for calset in feedcal.models.MergedCalendar.objects.filter(id=uuid):
             logger.info('Reading Calset %s', calset)
             for calendar in calset.calendars.all():
                 ical = cache.get('calendar: {0}'.format(calendar.id))
@@ -60,12 +60,16 @@ class PieView(View):
                     if 'DTEND' not in component:
                         continue
 
-                    # Set Bucket
-                    bucket = calendar.label
-                    if '#' in component['SUMMARY']:
-                        for word in component['SUMMARY'].split():
-                            if word.startswith('#'):
-                                bucket = word.strip('#')
+                    if request.GET.get('tags'):
+                        # Set Bucket
+                        bucket = calendar.label
+
+                        if '#' in component['SUMMARY']:
+                            for word in component['SUMMARY'].split():
+                                if word.startswith('#'):
+                                    bucket = word.strip('#')
+                    else:
+                        bucket = component['SUMMARY']
 
                     if 'RRULE' in component:
                         for entry in rrulestr(
@@ -90,14 +94,7 @@ class PieView(View):
                     logger.debug('%s %s', component['SUMMARY'], duration)
                     durations[bucket] += duration.total_seconds()
 
-        for category, value in sorted(durations.items(), key=operator.itemgetter(1), reverse=True):
-            dataset['rows'].append({'c': [{'v': category}, {'v': round(value / 60 / 60, 2)}]})
-
-        response = HttpResponse(content_type='application/json')
-        response.write('google.visualization.Query.setResponse(' + json.dumps({
-            'version': '0.6',
-            'table': dataset,
-            'reqId': '0',
-            'status': 'ok',
-        }) + ');')
-        return response
+        context = {'durations': json.dumps([['Label', 'Duration']] + list(
+            sorted(durations.items(), key=operator.itemgetter(1), reverse=True)
+        ))}
+        return render(request, 'feedcal/charts/pie.html', context)

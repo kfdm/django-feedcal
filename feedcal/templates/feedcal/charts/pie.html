@@ -8,7 +8,7 @@
             google.setOnLoadCallback(function() {
                 var wrap = new google.visualization.ChartWrapper({
                     'chartType': 'PieChart',
-                    'dataSourceUrl': '/feedcal/pie.values',
+                    'dataTable': {{ durations|safe }},
                     'containerId': 'chart_div',
                     'options': {
                         pieHole: false,
