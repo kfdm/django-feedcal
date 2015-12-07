@@ -11,6 +11,7 @@ from django.core.cache import cache
 import feedcal.models
 import operator
 import datetime
+from dateutil.rrule import rrulestr, rrule, rruleset
 
 import logging
 
@@ -27,8 +28,6 @@ class PieView(View):
 
         end = timezone.now()
         start = end - datetime.timedelta(days=7)
-        print(end)
-        print(start)
 
         dataset = {'cols': [
             {'id': 'Category', 'type': 'string'},
@@ -52,18 +51,29 @@ class PieView(View):
                 ical = Calendar.from_ical(ical)
 
                 for component in ical.subcomponents:
-                    if 'RRULE' in component:
-                        print('-' * 80)
-                        print(component['DTSTART'].dt)
-                        print(component['DTEND'].dt)
-                        print(display(component))
-                        print('-' * 80)
+                    # Filter out non events
+                    if 'SUMMARY' not in component:
                         continue
-
                     # Filter out non events
                     if 'DTSTART' not in component:
                         continue
                     if 'DTEND' not in component:
+                        continue
+
+                    # Set Bucket
+                    bucket = calendar.label
+                    if '#' in component['SUMMARY']:
+                        for word in component['SUMMARY'].split():
+                            if word.startswith('#'):
+                                bucket = word.strip('#')
+
+                    if 'RRULE' in component:
+                        for entry in rrulestr(
+                                component['RRULE'].to_ical().decode('utf-8'),
+                                dtstart=component['DTSTART'].dt).between(start, end):
+                            duration = component['DTEND'].dt - component['DTSTART'].dt
+                            logger.debug('%s %s', component['SUMMARY'], duration)
+                            durations[bucket] += duration.total_seconds()
                         continue
 
                     # Filter out all day events
@@ -78,12 +88,10 @@ class PieView(View):
 
                     duration = component['DTEND'].dt - component['DTSTART'].dt
                     logger.debug('%s %s', component['SUMMARY'], duration)
-
-                    #durations[calendar.label] += (component['DTEND'].dt - component['DTSTART'].dt).seconds
-                    durations[component['SUMMARY']] += duration.seconds
+                    durations[bucket] += duration.total_seconds()
 
         for category, value in sorted(durations.items(), key=operator.itemgetter(1), reverse=True):
-            dataset['rows'].append({'c': [{'v': category}, {'v': round(value / 60, 2)}]})
+            dataset['rows'].append({'c': [{'v': category}, {'v': round(value / 60 / 60, 2)}]})
 
         response = HttpResponse(content_type='application/json')
         response.write('google.visualization.Query.setResponse(' + json.dumps({
