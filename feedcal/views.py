@@ -12,6 +12,8 @@ import feedcal.models
 import operator
 import datetime
 from dateutil.rrule import rrulestr, rrule, rruleset
+from feedcal import USER_AGENT
+from django.contrib.sites.shortcuts import get_current_site
 
 import logging
 
@@ -42,7 +44,7 @@ class PieView(View):
                 ical = cache.get('calendar: {0}'.format(calendar.id))
                 if ical is None:
                     logger.info('Reading Calendar %s %s', calendar.label, calendar.calendar)
-                    response = requests.get(calendar.calendar)
+                    response = requests.get(calendar.calendar, headers={'User-Agent': USER_AGENT, 'Referer': get_current_site(request).domain})
                     cache.set('calendar: {0}'.format(calendar.id), response.text)
                     ical = response.text
                 else:
