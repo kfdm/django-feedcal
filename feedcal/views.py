@@ -28,8 +28,9 @@ class PieView(View):
         Create a Google DataView suitable for being rendered as a pie chart
         '''
 
+        days = int(self.request.GET.get('days', 7))
         end = timezone.now()
-        start = end - datetime.timedelta(days=7)
+        start = end - datetime.timedelta(days=days)
 
         dataset = {'cols': [
             {'id': 'Category', 'type': 'string'},
