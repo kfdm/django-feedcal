@@ -79,7 +79,7 @@ class PieView(View):
                                 dtstart=component['DTSTART'].dt).between(start, end):
                             duration = component['DTEND'].dt - component['DTSTART'].dt
                             logger.debug('%s %s', component['SUMMARY'], duration)
-                            durations[bucket] += duration.total_seconds()
+                            durations[bucket] += round(duration.total_seconds() / 60 / 60, 2)
                         continue
 
                     # Filter out all day events
@@ -94,7 +94,7 @@ class PieView(View):
 
                     duration = component['DTEND'].dt - component['DTSTART'].dt
                     logger.debug('%s %s', component['SUMMARY'], duration)
-                    durations[bucket] += duration.total_seconds()
+                    durations[bucket] += round(duration.total_seconds() / 60 / 60, 2)
 
         context = {'durations': json.dumps([['Label', 'Duration']] + list(
             sorted(durations.items(), key=operator.itemgetter(1), reverse=True)
