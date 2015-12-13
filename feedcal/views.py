@@ -61,9 +61,9 @@ class PieView(View):
         durations = collections.defaultdict(int)
 
         if days == 1:
-            durations[UNACCOUNTED_TAG] = 24
+            durations[UNACCOUNTED_TAG] = 24 * 60 * 60
         if 'today' in request.GET:
-            durations[REMAINING_TIME] = (self._date_ceil(now) - now).total_seconds() / 60 / 60
+            durations[REMAINING_TIME] = (self._date_ceil(now) - now).total_seconds()
             durations[UNACCOUNTED_TAG] -= durations[REMAINING_TIME]
 
         for calset in feedcal.models.MergedCalendar.objects.filter(id=uuid):
@@ -107,7 +107,9 @@ class PieView(View):
                                 dtstart=component['DTSTART'].dt).between(start, end):
                             duration = component['DTEND'].dt - component['DTSTART'].dt
                             logger.debug('%s %s', component['SUMMARY'], duration)
-                            durations[bucket] += round(duration.total_seconds() / 60 / 60, 2)
+                            durations[bucket] += duration.total_seconds()
+                            if UNACCOUNTED_TAG in durations:
+                                durations[UNACCOUNTED_TAG] -= duration.total_seconds()
                         continue
 
                     # Filter out all day events
@@ -122,9 +124,11 @@ class PieView(View):
 
                     duration = component['DTEND'].dt - component['DTSTART'].dt
                     logger.debug('%s %s', component['SUMMARY'], duration)
-                    durations[bucket] += round(duration.total_seconds() / 60 / 60, 2)
+                    durations[bucket] += duration.total_seconds()
+                    if UNACCOUNTED_TAG in durations:
+                        durations[UNACCOUNTED_TAG] -= duration.total_seconds()
 
         context = {'durations': json.dumps([['Label', 'Duration']] + list(
-            sorted(durations.items(), key=operator.itemgetter(1), reverse=True)
+            [(label, round(duration / 60 / 60, 2)) for (label, duration) in sorted(durations.items(), key=operator.itemgetter(1), reverse=True)]
         ))}
         return render(request, 'feedcal/charts/pie.html', context)
