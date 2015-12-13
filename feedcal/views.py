@@ -60,8 +60,7 @@ class PieView(View):
 
         durations = collections.defaultdict(int)
 
-        if days == 1:
-            durations[UNACCOUNTED_TAG] = 24 * 60 * 60
+        durations[UNACCOUNTED_TAG] = days * 24 * 60 * 60
         if 'today' in request.GET:
             durations[REMAINING_TIME] = (self._date_ceil(now) - now).total_seconds()
             durations[UNACCOUNTED_TAG] -= durations[REMAINING_TIME]
