@@ -19,18 +19,39 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+UNACCOUNTED_TAG = 'Unaccounted'
+REMAINING_TIME = 'Remaining'
+
 def display(cal):
     return cal.to_ical().decode('utf8').replace('\r\n', '\n').strip()
 
+
 class PieView(View):
+    def _date_floor(self, dt):
+        return dt.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    def _date_ceil(self, dt):
+        return self._date_floor(dt) + datetime.timedelta(days=1)
+
     def get(self, request, uuid):
         '''
         Create a Google DataView suitable for being rendered as a pie chart
         '''
 
-        days = int(self.request.GET.get('days', 7))
-        end = timezone.now()
-        start = end - datetime.timedelta(days=days)
+        now = timezone.localtime(timezone.now())
+
+        if 'today' in request.GET:
+            days = 1
+        elif 'days' in request.GET:
+            days = int(request.GET.get('days'))
+        else:
+            days = 7
+
+        end = now
+        if 'today' in request.GET:
+            start = self._date_floor(now)
+        else:
+            start = end - datetime.timedelta(days=days)
 
         dataset = {'cols': [
             {'id': 'Category', 'type': 'string'},
@@ -38,6 +59,12 @@ class PieView(View):
         ], 'rows': []}
 
         durations = collections.defaultdict(int)
+
+        if days == 1:
+            durations[UNACCOUNTED_TAG] = 24
+        if 'today' in request.GET:
+            durations[REMAINING_TIME] = (self._date_ceil(now) - now).total_seconds() / 60 / 60
+            durations[UNACCOUNTED_TAG] -= durations[REMAINING_TIME]
 
         for calset in feedcal.models.MergedCalendar.objects.filter(id=uuid):
             logger.info('Reading Calset %s', calset)
