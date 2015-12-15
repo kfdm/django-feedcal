@@ -1,36 +1,38 @@
 import collections
-import json
-from django.shortcuts import render
-from django.http import HttpResponse
-from django.shortcuts import render
-from django.views.generic.base import View
-from icalendar import Calendar, Event
-from django.utils import timezone
-import requests
-from django.core.cache import cache
-import feedcal.models
-import operator
 import datetime
-from dateutil.rrule import rrulestr, rrule, rruleset
-from feedcal import USER_AGENT
-from django.contrib.sites.shortcuts import get_current_site
-from django.core.urlresolvers import reverse
-
+import json
 import logging
+import operator
+
+import requests
+from dateutil.rrule import rruleset, rrulestr
+from icalendar import Calendar, Event
+
+from django.contrib.sites.shortcuts import get_current_site
+from django.core.cache import cache
+from django.shortcuts import render
+from django.utils import timezone
+from django.views.generic.base import View
+
+import feedcal.models
+from feedcal import USER_AGENT
 
 logger = logging.getLogger(__name__)
 
 UNACCOUNTED_TAG = 'Unaccounted'
 REMAINING_TIME = 'Remaining'
 
+
 def display(cal):
     return cal.to_ical().decode('utf8').replace('\r\n', '\n').strip()
+
 
 class IndexView(View):
     def get(self, request):
         return render(request, 'feedcal/index.html', {
             'calendars': feedcal.models.MergedCalendar.objects.filter()
         })
+
 
 class PieView(View):
     def _date_floor(self, dt):
@@ -58,11 +60,6 @@ class PieView(View):
             start = self._date_floor(now)
         else:
             start = end - datetime.timedelta(days=days)
-
-        dataset = {'cols': [
-            {'id': 'Category', 'type': 'string'},
-            {'id': 'Duration', 'type': 'number'},
-        ], 'rows': []}
 
         durations = collections.defaultdict(int)
 
@@ -138,6 +135,7 @@ class PieView(View):
         ))}
 
         return render(request, 'feedcal/charts/pie.html', context)
+
 
 class BarView(PieView):
     pass
