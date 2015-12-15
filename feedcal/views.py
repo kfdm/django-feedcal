@@ -14,6 +14,7 @@ import datetime
 from dateutil.rrule import rrulestr, rrule, rruleset
 from feedcal import USER_AGENT
 from django.contrib.sites.shortcuts import get_current_site
+from django.core.urlresolvers import reverse
 
 import logging
 
@@ -25,6 +26,11 @@ REMAINING_TIME = 'Remaining'
 def display(cal):
     return cal.to_ical().decode('utf8').replace('\r\n', '\n').strip()
 
+class IndexView(View):
+    def get(self, request):
+        return render(request, 'feedcal/index.html', {
+            'calendars': feedcal.models.MergedCalendar.objects.filter()
+        })
 
 class PieView(View):
     def _date_floor(self, dt):
@@ -127,7 +133,11 @@ class PieView(View):
                     if UNACCOUNTED_TAG in durations:
                         durations[UNACCOUNTED_TAG] -= duration.total_seconds()
 
-        context = {'durations': json.dumps([['Label', 'Duration']] + list(
+        context = {'calset': calset, 'durations': json.dumps([['Label', 'Duration']] + list(
             [(label, round(duration / 60 / 60, 2)) for (label, duration) in sorted(durations.items(), key=operator.itemgetter(1), reverse=True)]
         ))}
+
         return render(request, 'feedcal/charts/pie.html', context)
+
+class BarView(PieView):
+    pass

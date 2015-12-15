@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<ul>
+{% for calendar in calendars %}
+    <li><a href="{% url 'feedcal:pie' uuid=calendar.id %}?today=true&tags=true">{{ calendar.label }} - Today</a></li>
+{% endfor %}
+</ul>
+{% endblock %}

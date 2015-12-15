@@ -5,5 +5,7 @@ import feedcal.views
 
 urlpatterns = patterns(
     '',
-    url(r'^pie/(?P<uuid>[^/]+)/$', login_required(feedcal.views.PieView.as_view())),
+    url(r'^$', login_required(feedcal.views.IndexView.as_view()), name='index'),
+    url(r'^(?P<uuid>[^/]+)/pie/$', login_required(feedcal.views.PieView.as_view()), name='pie'),
+    url(r'^(?P<uuid>[^/]+)/bar/$', login_required(feedcal.views.BarView.as_view()), name='bar'),
 )
