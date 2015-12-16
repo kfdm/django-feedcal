@@ -44,27 +44,34 @@ class PieView(View):
     def get(self, request, uuid):
         '''
         Create a Google DataView suitable for being rendered as a pie chart
+
+        @param date string: today, yesterday, yyyymmdd
+        @param days integer:
         '''
 
         now = timezone.localtime(timezone.now())
 
-        if 'today' in request.GET:
-            days = 1
-        elif 'days' in request.GET:
-            days = int(request.GET.get('days'))
-        else:
-            days = 7
+        date = request.GET.get('date')
+        days = int(request.GET.get('days', 7))
 
-        end = now
-        if 'today' in request.GET:
+        if date == 'today':
+            days = 1
             start = self._date_floor(now)
+            end = now
+        elif date == 'yesterday':
+            days = 1
+            end = self._date_floor(now)
+            start = end - datetime.timedelta(days=days)
         else:
+            # TODO: Parse date. Just use 'today' for now
+            end = now
             start = end - datetime.timedelta(days=days)
 
         durations = collections.defaultdict(int)
+        print(start, '-', end)
 
         durations[UNACCOUNTED_TAG] = days * 24 * 60 * 60
-        if 'today' in request.GET:
+        if date == 'today':
             durations[REMAINING_TIME] = (self._date_ceil(now) - now).total_seconds()
             durations[UNACCOUNTED_TAG] -= durations[REMAINING_TIME]
 

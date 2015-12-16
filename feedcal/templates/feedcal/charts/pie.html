@@ -14,8 +14,9 @@
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="nav navbar-nav">
-                <li><a href="{% url 'feedcal:pie' uuid=calset.id %}?today=true&tags=true">{{ calset.label }} - Today</a></li>
-                <li><a href="{% url 'feedcal:pie' uuid=calset.id %}?days=7">Week</a></li>
+                <li><a href="{% url 'feedcal:pie' uuid=calset.id %}?date=today&tags=true">{{ calset.label }} - Today</a></li>
+                <li><a href="{% url 'feedcal:pie' uuid=calset.id %}?date=yesterday&tags=true">Yesterday</a></li>
+                <li><a href="{% url 'feedcal:pie' uuid=calset.id %}?days=7&tags=true">Week</a></li>
                 <li><a href="{% url 'feedcal:bar' uuid=calset.id %}">Bar</a></li>
             </ul>
         </div><!-- /.navbar-collapse -->
