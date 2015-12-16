@@ -68,7 +68,6 @@ class PieView(View):
             start = end - datetime.timedelta(days=days)
 
         durations = collections.defaultdict(int)
-        print(start, '-', end)
 
         durations[UNACCOUNTED_TAG] = days * 24 * 60 * 60
         if date == 'today':
@@ -126,12 +125,14 @@ class PieView(View):
                         continue
 
                     # Filter out events that are outside our time range
-                    if component['DTEND'].dt > end:
+                    if component['DTSTART'].dt > end:
                         continue
-                    if component['DTSTART'].dt < start:
+                    if component['DTEND'].dt < start:
                         continue
 
-                    duration = component['DTEND'].dt - component['DTSTART'].dt
+                    # Handle events that extend into a different day
+                    duration = min(component['DTEND'].dt, end) - max(component['DTSTART'].dt, start)
+
                     logger.debug('%s %s', component['SUMMARY'], duration)
                     durations[bucket] += duration.total_seconds()
                     if UNACCOUNTED_TAG in durations:
