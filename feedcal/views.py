@@ -136,7 +136,7 @@ class ParseView(View):
                 durations[UNACCOUNTED_TAG] -= duration
 
         context['durations'] = json.dumps([['Label', 'Duration']] + list(
-            [(label, round(duration / 60 / 60 / 7, 2)) for (label, duration) in sorted(durations.items(), key=operator.itemgetter(1), reverse=True)]
+            [(label, round(duration / 60 / 60, 2)) for (label, duration) in sorted(durations.items(), key=operator.itemgetter(1), reverse=True)]
         ))
 
         return render(request, 'feedcal/parse.html', context)
