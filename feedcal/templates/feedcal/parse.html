@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block subnav %}
+<nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">Brand</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+            {% for calendar in calendars %}
+                <li><a href="{% url 'feedcal:pie' uuid=calendar.id %}?today=true&tags=true">{{ calendar.label }}</a></li>
+            {% endfor %}
+            </ul>
+        </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+</nav>
+{% endblock %}
+
+{% if durations %}
+{% block js %}
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript">
+    // https://developers.google.com/chart/interactive/docs/gallery/annotationchart
+    google.load("visualization", "1");
+    google.setOnLoadCallback(function() {
+        var wrap = new google.visualization.ChartWrapper({
+            'chartType': 'PieChart',
+            'dataTable': {{ durations|safe }},
+            'containerId': 'chart_div',
+            'options': {
+                pieHole: false,
+            }
+        });
+        wrap.draw();
+    });
+</script>
+{% endblock %}
+{% endif %}
+
+{% block content %}
+<br /><br />
+<div id="chart_div" style="width:800px; height:400px">Loading...</div>
+<form action="{% url 'feedcal:parse' %}" method="get">
+    {{ form }}
+    <input type="submit" value="Submit" />
+</form>
+{% endblock %}
