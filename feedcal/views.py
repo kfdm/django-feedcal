@@ -11,6 +11,7 @@ from icalendar import Calendar, Event
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.shortcuts import render
+from django.utils.translation import ugettext as _
 from django.utils import timezone
 from django.views.generic.base import View
 from django import forms
@@ -19,9 +20,6 @@ import feedcal.models
 from feedcal import USER_AGENT
 
 logger = logging.getLogger(__name__)
-
-UNACCOUNTED_TAG = 'Unaccounted'
-REMAINING_TIME = 'Remaining'
 
 
 def display(cal):
@@ -53,6 +51,9 @@ class ParseView(View):
         return response.text
 
     def _get_buckets(self, request, date):
+        UNACCOUNTED_TAG = _('Unaccounted')
+        REMAINING_TIME = _('Remaining')
+
         days = int(request.GET.get('days', 7))
         now = timezone.localtime(timezone.now())
 
@@ -110,6 +111,9 @@ class ParseView(View):
             yield duration.total_seconds(), component['SUMMARY']
 
     def get(self, request):
+        UNACCOUNTED_TAG = _('Unaccounted')
+        REMAINING_TIME = _('Remaining')
+
         class NameForm(forms.Form):
             calendar = forms.CharField(label='Calendar')
             date = forms.CharField(label='Date', initial='today')
@@ -150,6 +154,9 @@ class PieView(ParseView):
         @param date string: today, yesterday, yyyymmdd
         @param days integer:
         '''
+
+        UNACCOUNTED_TAG = _('Unaccounted')
+        REMAINING_TIME = _('Remaining')
 
         date = request.GET.get('date')
         durations, start, end = self._get_buckets(request, date)
