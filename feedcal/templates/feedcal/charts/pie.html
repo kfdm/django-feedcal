@@ -1,27 +1,16 @@
 {% extends "base.html" %}
 {% block subnav %}
-<nav class="navbar navbar-inverse">
-    <div class="container-fluid">
-        <!-- Brand and toggle get grouped for better mobile display -->
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="{% url 'feedcal:index' %}">FeedCal</a>
-        </div>
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav">
-                <li><a href="{% url 'feedcal:pie' uuid=calset.id %}?date=today&tags=true">{{ calset.label }} - Today</a></li>
-                <li><a href="{% url 'feedcal:pie' uuid=calset.id %}?date=yesterday&tags=true">Yesterday</a></li>
-                <li><a href="{% url 'feedcal:pie' uuid=calset.id %}?days=7&tags=true">Week</a></li>
-                <li><a href="{% url 'feedcal:bar' uuid=calset.id %}">Bar</a></li>
-            </ul>
-        </div><!-- /.navbar-collapse -->
-    </div><!-- /.container-fluid -->
-</nav>
+<ul class="nav navbar-nav navbar-right">
+    <li class="dropdown">
+      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
+      <ul class="dropdown-menu">
+        <li><a href="{% url 'feedcal:pie' uuid=calset.id %}?date=today&tags=true">{{ calset.label }} - Today</a></li>
+        <li><a href="{% url 'feedcal:pie' uuid=calset.id %}?date=yesterday&tags=true">Yesterday</a></li>
+        <li><a href="{% url 'feedcal:pie' uuid=calset.id %}?days=7&tags=true">Week</a></li>
+        <li><a href="{% url 'feedcal:bar' uuid=calset.id %}">Bar</a></li>
+    </ul>
+</li>
+</ul>
 {% endblock %}
 {% block js %}
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
@@ -42,6 +31,5 @@
 </script>
 {% endblock %}
 {% block content %}
-<br /><br /><br /><br /><br /><br />
     <div id="chart_div" style="width:800px; height:400px">Loading...</div>
 {% endblock %}
