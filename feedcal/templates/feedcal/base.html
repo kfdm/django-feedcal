@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block subnav %}
+<ol class="breadcrumb">
+{% for title, link in timeline %}
+    <li><a href="{{ link }}">{{ title }}</a></li>
+{% endfor %}
+</ol>
+{% endblock %}

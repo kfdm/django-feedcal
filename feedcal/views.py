@@ -8,13 +8,14 @@ import requests
 from dateutil.rrule import rruleset, rrulestr
 from icalendar import Calendar, Event
 
+from django import forms
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
+from django.core.urlresolvers import reverse
 from django.shortcuts import render
-from django.utils.translation import ugettext as _
 from django.utils import timezone
+from django.utils.translation import ugettext as _
 from django.views.generic.base import View
-from django import forms
 
 import feedcal.models
 from feedcal import USER_AGENT
@@ -29,11 +30,13 @@ def display(cal):
 class IndexView(View):
     def get(self, request):
         return render(request, 'feedcal/index.html', {
-            'calendars': feedcal.models.MergedCalendar.objects.filter()
+            'calendars': feedcal.models.MergedCalendar.objects.all()
         })
 
 
 class ParseView(View):
+    def _date_today(self):
+        return self._date_floor(timezone.localtime(timezone.now()))
     def _date_floor(self, dt):
         return dt.replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -147,7 +150,7 @@ class ParseView(View):
 
 
 class PieView(ParseView):
-    def get(self, request, uuid):
+    def get(self, request, uuid, date=None):
         '''
         Create a Google DataView suitable for being rendered as a pie chart
 
@@ -158,7 +161,6 @@ class PieView(ParseView):
         UNACCOUNTED_TAG = _('Unaccounted')
         REMAINING_TIME = _('Remaining')
 
-        date = request.GET.get('date')
         durations, start, end = self._get_buckets(request, date)
 
         for calset in feedcal.models.MergedCalendar.objects.filter(id=uuid):
@@ -186,6 +188,14 @@ class PieView(ParseView):
         context = {'calset': calset, 'durations': json.dumps([['Label', 'Duration']] + list(
             [(label, round(duration / 60 / 60, 2)) for (label, duration) in sorted(durations.items(), key=operator.itemgetter(1), reverse=True)]
         ))}
+
+        context['timeline'] = [
+            (_('index'), reverse('feedcal:index')),
+            (_('today'), reverse('feedcal:pie', kwargs={'uuid': uuid, 'date': 'today'})),
+            (_('yesterday'), reverse('feedcal:pie', kwargs={'uuid': uuid, 'date': 'yesterday'})),
+            (_('week'), reverse('feedcal:pie', kwargs={'uuid': uuid,})),
+            (_('bar chart'), reverse('feedcal:bar', kwargs={'uuid': uuid,})),
+        ]
 
         return render(request, 'feedcal/charts/pie.html', context)
 

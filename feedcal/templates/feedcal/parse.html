@@ -1,11 +1,4 @@
 {% extends "base.html" %}
-{% block subnav %}
-<ul class="nav navbar-nav navbar-right">
-{% for calendar in calendars %}
-    <li><a href="{% url 'feedcal:pie' uuid=calendar.id %}?today=true&tags=true">{{ calendar.label }}</a></li>
-{% endfor %}
-</ul>
-{% endblock %}
 
 {% if durations %}
 {% block js %}

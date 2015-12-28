@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-21 10:27+0000\n"
+"POT-Creation-Date: 2015-12-28 13:15+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,10 +18,42 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: views.py:54 views.py:114 views.py:158
+#: urls.py:20 urls.py:25
+msgid "Feeds"
+msgstr ""
+
+#: urls.py:21 urls.py:27
+#, fuzzy
+#| msgid "Parse"
+msgid "parse"
+msgstr "パーズ"
+
+#: urls.py:26 views.py:193
+#, fuzzy
+#| msgid "Index"
+msgid "index"
+msgstr "索引"
+
+#: views.py:57 views.py:117 views.py:161
 msgid "Unaccounted"
 msgstr "未記録"
 
-#: views.py:55 views.py:115 views.py:159
+#: views.py:58 views.py:118 views.py:162
 msgid "Remaining"
 msgstr "残り時間"
+
+#: views.py:194
+msgid "today"
+msgstr "今日"
+
+#: views.py:195
+msgid "yesterday"
+msgstr "昨日"
+
+#: views.py:196
+msgid "week"
+msgstr "一週間"
+
+#: views.py:197
+msgid "bar chart"
+msgstr ""
