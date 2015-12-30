@@ -117,7 +117,7 @@ class ParseView(View):
 
                     duration = component['DTEND'].dt - component['DTSTART'].dt
                     logger.debug('%s %s', component['SUMMARY'], duration)
-                    yield duration.total_seconds(), component['SUMMARY']
+                    yield duration.total_seconds(), component['SUMMARY'], entry.date()
 
             # Filter out all day events
             if not isinstance(component['DTSTART'].dt, datetime.datetime):
@@ -130,7 +130,7 @@ class ParseView(View):
                 continue
 
             duration = min(component['DTEND'].dt, end) - max(component['DTSTART'].dt, start)
-            yield duration.total_seconds(), component['SUMMARY']
+            yield duration.total_seconds(), component['SUMMARY'], min(component['DTEND'].dt, end).date()
 
     def get(self, request):
         UNACCOUNTED_TAG = _('Unaccounted')
@@ -156,7 +156,7 @@ class ParseView(View):
 
         durations, start, end = self._get_buckets(request, date)
 
-        for duration, label in self.filter_calendar(ical, start, end):
+        for duration, label, __ in self.filter_calendar(ical, start, end):
             durations[label] += duration
             if UNACCOUNTED_TAG in durations:
                 durations[UNACCOUNTED_TAG] -= duration
@@ -188,7 +188,7 @@ class PieView(ParseView):
                 ical = self._get_cal(request, calendar.calendar)
                 ical = Calendar.from_ical(ical)
 
-                for duration, label in self.filter_calendar(ical, start, end):
+                for duration, label, __ in self.filter_calendar(ical, start, end):
                     bucket = label
                     if 'notags' not in request.GET:
                         # Set Bucket
@@ -218,5 +218,61 @@ class PieView(ParseView):
         return render(request, 'feedcal/charts/pie.html', context)
 
 
-class BarView(PieView):
-    pass
+class BarView(ParseView):
+    def get(self, request, uuid):
+        def bucket():
+            _bucket = collections.defaultdict(int)
+            _bucket[_('Unaccounted')] = 24 * 60 * 60
+            _bucket[_('Remaining')] = 0
+            return _bucket
+
+        calset = feedcal.models.MergedCalendar.objects.get(id=uuid)
+        logger.info('Reading Calset %s', calset)
+
+        end = timezone.localtime(timezone.now())
+        start = self._date_ceil(end - datetime.timedelta(days=7))
+
+        bucket = collections.defaultdict(bucket)
+        tags = collections.defaultdict(int)
+
+        for calendar in calset.calendars.all():
+            ical = self._get_cal(request, calendar.calendar)
+            ical = Calendar.from_ical(ical)
+
+            for duration, label, date in self.filter_calendar(ical, start, end):
+                tag = calendar.label
+                if '#' in label:
+                    for word in label.split():
+                        if word.startswith('#'):
+                            tag = word.strip('#')
+
+                bucket[date][tag] += duration
+                bucket[date][_('Unaccounted')] -= duration
+                tags[tag] += duration
+
+        # Build our rendering context
+        context = {'calset': calset}
+
+        # The first row of our result will be our lables, so we create a list of them sorted by the
+        # longest duration
+        tags = [label for (label, duration) in sorted(tags.items(), key=operator.itemgetter(1), reverse=True)]
+        context['durations'] = [['Tags'] + list(tags)]
+
+        # After that we sort through our buckets in date order to build our timeline
+        for date in sorted(bucket):
+            row = [str(date)]
+            # But we have to make sure to print the values in the same order as our first line
+            for tag in tags:
+                row.append(round(bucket[date][tag] / 60 / 60, 2))
+            context['durations'].append(row)
+        # Lastly we convert to json which is the easiest format to use with Google charts
+        context['durations'] = json.dumps(context['durations'])
+
+        context['timeline'] = [
+            (_('index'), reverse('feedcal:index')),
+            (_('today'), reverse('feedcal:pie', kwargs={'uuid': uuid, 'date': 'today'})),
+            (_('yesterday'), reverse('feedcal:pie', kwargs={'uuid': uuid, 'date': 'yesterday'})),
+            (_('week'), reverse('feedcal:pie', kwargs={'uuid': uuid,})),
+            (_('bar chart'), reverse('feedcal:bar', kwargs={'uuid': uuid,})),
+        ]
+        return render(request, 'feedcal/charts/bar.html', context)
