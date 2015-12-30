@@ -3,7 +3,7 @@
 <p>Calendars</p>
 <ul>
 {% for calendar in calendars %}
-    <li><a href="{% url 'feedcal:pie' uuid=calendar.id %}?today=true&tags=true">{{ calendar.label }}</a></li>
+    <li><a href="{% url 'feedcal:pie' uuid=calendar.id date='today' %}">{{ calendar.label }}</a></li>
 {% endfor %}
 </ul>
 {% endblock %}

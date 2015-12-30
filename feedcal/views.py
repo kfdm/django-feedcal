@@ -30,13 +30,14 @@ def display(cal):
 class IndexView(View):
     def get(self, request):
         return render(request, 'feedcal/index.html', {
-            'calendars': feedcal.models.MergedCalendar.objects.all()
+            'calendars': feedcal.models.MergedCalendar.objects.filter(owner=request.user.id)
         })
 
 
 class ParseView(View):
     def _date_today(self):
         return self._date_floor(timezone.localtime(timezone.now()))
+
     def _date_floor(self, dt):
         return dt.replace(hour=0, minute=0, second=0, microsecond=0)
 
