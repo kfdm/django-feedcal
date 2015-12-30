@@ -93,9 +93,28 @@ class ParseView(View):
                 continue
 
             if 'RRULE' in component:
+                # I'm not entirely sure this is working correctly yet. The idea is that we
+                # need to look at the EXDATE fields to make sure that when we loop through
+                # the RRULE, that we don't count excluded dates. There seems to be some
+                # weird behavior where sometimes EXDATE is a list and sometimes just a
+                # single entry
+                exdate = []
+                if 'EXDATE' in component:
+                    try:
+                        for entry in component['EXDATE']:
+                            for item in entry.dts:
+                                exdate.append(item.dt)
+                    except TypeError:
+                        for item in component['EXDATE'].dts:
+                            exdate.append(item.dt)
+
                 for entry in rrulestr(
                         component['RRULE'].to_ical().decode('utf-8'),
                         dtstart=component['DTSTART'].dt).between(start, end):
+
+                    if component['DTSTART'].dt in exdate:
+                        continue
+
                     duration = component['DTEND'].dt - component['DTSTART'].dt
                     logger.debug('%s %s', component['SUMMARY'], duration)
                     yield duration.total_seconds(), component['SUMMARY']
