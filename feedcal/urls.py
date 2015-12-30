@@ -15,7 +15,6 @@ urlpatterns = [
 
 
 def subnav(namespace, request):
-    print(request.resolver_match)
     if not request.user.is_authenticated():
         return {
             _('Feeds'): [
