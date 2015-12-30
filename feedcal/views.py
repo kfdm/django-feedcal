@@ -103,21 +103,21 @@ class ParseView(View):
                     try:
                         for entry in component['EXDATE']:
                             for item in entry.dts:
-                                exdate.append(item.dt)
+                                exdate.append(item.dt.date())
                     except TypeError:
                         for item in component['EXDATE'].dts:
-                            exdate.append(item.dt)
+                            exdate.append(item.dt.date())
 
                 for entry in rrulestr(
                         component['RRULE'].to_ical().decode('utf-8'),
                         dtstart=component['DTSTART'].dt).between(start, end):
 
-                    if component['DTSTART'].dt in exdate:
+                    if entry.date() in exdate:
                         continue
 
                     duration = component['DTEND'].dt - component['DTSTART'].dt
                     logger.debug('%s %s', component['SUMMARY'], duration)
-                    yield duration.total_seconds(), component['SUMMARY'], entry.date()
+                    yield duration.total_seconds(), component['SUMMARY'], timezone.localtime(entry).date()
 
             # Filter out all day events
             if not isinstance(component['DTSTART'].dt, datetime.datetime):
@@ -130,7 +130,7 @@ class ParseView(View):
                 continue
 
             duration = min(component['DTEND'].dt, end) - max(component['DTSTART'].dt, start)
-            yield duration.total_seconds(), component['SUMMARY'], min(component['DTEND'].dt, end).date()
+            yield duration.total_seconds(), component['SUMMARY'], timezone.localtime(min(component['DTEND'].dt, end)).date()
 
     def get(self, request):
         UNACCOUNTED_TAG = _('Unaccounted')
@@ -234,6 +234,7 @@ class BarView(ParseView):
 
         bucket = collections.defaultdict(bucket)
         tags = collections.defaultdict(int)
+        tags[_('Unaccounted')] = (end - start).total_seconds()
 
         for calendar in calset.calendars.all():
             ical = self._get_cal(request, calendar.calendar)
@@ -249,6 +250,7 @@ class BarView(ParseView):
                 bucket[date][tag] += duration
                 bucket[date][_('Unaccounted')] -= duration
                 tags[tag] += duration
+                tags[_('Unaccounted')] -= duration
 
         # Build our rendering context
         context = {'calset': calset}
