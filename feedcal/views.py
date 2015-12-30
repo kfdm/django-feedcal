@@ -186,12 +186,11 @@ class PieView(ParseView):
             logger.info('Reading Calset %s', calset)
             for calendar in calset.calendars.all():
                 ical = self._get_cal(request, calendar.calendar)
-
                 ical = Calendar.from_ical(ical)
 
                 for duration, label in self.filter_calendar(ical, start, end):
                     bucket = label
-                    if request.GET.get('tags'):
+                    if 'notags' not in request.GET:
                         # Set Bucket
                         bucket = calendar.label
                         if '#' in label:
