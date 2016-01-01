@@ -208,6 +208,12 @@ class PieView(ParseView):
             [(label, round(duration / 60 / 60, 2)) for (label, duration) in sorted(durations.items(), key=operator.itemgetter(1), reverse=True)]
         ))}
 
+        context['date'] = self._date_floor(end).date()
+        context['date_prev'] = context['date'] - datetime.timedelta(days=1)
+        context['date_next'] = context['date'] + datetime.timedelta(days=1)
+        context['uuid'] = uuid
+
+
         context['timeline'] = [
             (_('index'), reverse('feedcal:index')),
             (_('today'), reverse('feedcal:pie', kwargs={'uuid': uuid, 'date': 'today'})),

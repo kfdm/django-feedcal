@@ -16,7 +16,14 @@
         wrap.draw();
     });
 </script>
-{% endblock %}
-{% block content %}
-    <div id="chart_div" style="width:800px; height:400px">Loading...</div>
+{% endblock %} {% block content %}
+<div class="row">
+    <div class="col-md-1"><a href="{% url 'feedcal:pie' uuid=uuid date=date_prev|date:"Y-m-d" %}">Prev</a></div>
+    <div class="col-md-8">
+        <div class="embed-responsive embed-responsive-4by3">
+            <div class="embed-responsive-item" id="chart_div">Loading...</div>
+        </div>
+    </div>
+    <div class="col-md-1"><a href="{% url 'feedcal:pie' uuid=uuid date=date_next|date:"Y-m-d" %}">Next</a></div>
+</div>
 {% endblock %}
