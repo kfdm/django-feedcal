@@ -70,8 +70,7 @@ class ParseView(View):
             end = self._date_floor(now)
             start = end - datetime.timedelta(days=days)
         else:
-            # TODO: Parse date. Just use 'today' for now
-            end = now
+            end = timezone.make_aware(datetime.datetime.strptime(date, '%Y-%m-%d'))
             start = end - datetime.timedelta(days=days)
 
         durations = collections.defaultdict(int)
