@@ -61,7 +61,10 @@ class ParseView(View):
         days = int(request.GET.get('days', 7))
         now = timezone.localtime(timezone.now())
 
-        if date == 'today':
+        if date is None:
+            end = self._date_floor(now)
+            start = end - datetime.timedelta(days=days)
+        elif date == 'today':
             days = 1
             start = self._date_floor(now)
             end = now
